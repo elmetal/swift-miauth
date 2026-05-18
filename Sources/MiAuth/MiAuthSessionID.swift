@@ -1,8 +1,14 @@
 import Foundation
 
+/// A session identifier used to correlate a MiAuth authorization flow.
 public struct MiAuthSessionID: Hashable, Sendable {
+    /// The raw session identifier value.
     public let rawValue: String
 
+    /// Creates a session identifier from a raw value.
+    ///
+    /// - Parameter rawValue: The session identifier returned from, or sent to, an instance.
+    /// - Throws: ``MiAuthError/invalidSessionID`` if the value is empty, too long, or contains unsupported characters.
     public init(_ rawValue: String) throws {
         guard Self.isValid(rawValue) else {
             throw MiAuthError.invalidSessionID
@@ -14,6 +20,11 @@ public struct MiAuthSessionID: Hashable, Sendable {
         self.rawValue = rawValue
     }
 
+    /// Generates a random session identifier.
+    ///
+    /// - Parameter byteCount: The number of random bytes to encode as hexadecimal text.
+    /// - Returns: A random session identifier.
+    /// - Precondition: `byteCount` must be greater than `0`.
     public static func generate(byteCount: Int = 32) -> Self {
         precondition(byteCount > 0, "byteCount must be positive")
 
