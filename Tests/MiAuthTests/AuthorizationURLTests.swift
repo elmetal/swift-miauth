@@ -5,8 +5,8 @@ import Testing
 @Test func authorizationURLContainsMiAuthPathAndEncodedQuery() throws {
     let request = MiAuthRequest(
         instanceURL: try #require(URL(string: "https://misskey.example")),
-        appName: "keyring",
-        callbackURL: URL(string: "keyring://miauth/callback")!,
+        appName: "MiAuth Example",
+        callbackURL: URL(string: "miauth-example://callback")!,
         permissions: [.readAccount, .writeNotes],
         sessionID: try MiAuthSessionID("fixed-session")
     )
@@ -18,8 +18,8 @@ import Testing
     #expect(components.scheme == "https")
     #expect(components.host == "misskey.example")
     #expect(components.path == "/miauth/fixed-session")
-    #expect(queryItems["name"] == "keyring")
-    #expect(queryItems["callback"] == "keyring://miauth/callback")
+    #expect(queryItems["name"] == "MiAuth Example")
+    #expect(queryItems["callback"] == "miauth-example://callback")
     #expect(queryItems["permission"] == "read:account,write:notes")
 }
 

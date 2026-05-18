@@ -36,8 +36,8 @@ let instanceURL = URL(string: "https://misskey.example")!
 
 let request = MiAuthRequest(
     instanceURL: instanceURL,
-    appName: "keyring",
-    callbackURL: URL(string: "keyring://miauth/callback")!,
+    appName: "MiAuth Example",
+    callbackURL: URL(string: "miauth-example://callback")!,
     permissions: [.readAccount, .writeNotes]
 )
 
