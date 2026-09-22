@@ -1,6 +1,7 @@
 # swift-miauth
 
 [![CI](https://github.com/elmetal/swift-miauth/actions/workflows/ci.yml/badge.svg)](https://github.com/elmetal/swift-miauth/actions/workflows/ci.yml)
+[![Docs](https://github.com/elmetal/swift-miauth/actions/workflows/docs.yml/badge.svg)](https://elmetal.github.io/swift-miauth/documentation/miauth/)
 
 `swift-miauth` is a small Swift package for the protocol-level MiAuth flow used by Misskey-compatible servers.
 
@@ -13,6 +14,8 @@ It helps you:
 - exchange an approved session for an access token and the authorizing user
 
 It does not present browser UI, store tokens, manage accounts, or wrap the rest of the Misskey API.
+
+API reference: <https://elmetal.github.io/swift-miauth/documentation/miauth/>
 
 ## Installation
 
