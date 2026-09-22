@@ -117,3 +117,26 @@ import Testing
 
     #expect(permission == "write:notes,read:account,custom:capability")
 }
+
+@Test func authorizationURLPercentEncodesPlusAndFormDelimiters() throws {
+    let request = MiAuthRequest(
+        instanceURL: try #require(URL(string: "https://misskey.example")),
+        appName: "Foo & Bar+Baz 藍",
+        callbackURL: try #require(URL(string: "myapp://callback?state=a+b%2Bc&next=1")),
+        permissions: [.account.read],
+        sessionID: try MiAuthSessionID("session-encoding")
+    )
+
+    let url = try request.authorizationURL()
+    let raw = url.absoluteString
+
+    // No literal `+`, `&`, or `=` may survive inside a value.
+    #expect(raw == "https://misskey.example/miauth/session-encoding?name=Foo%20%26%20Bar%2BBaz%20%E8%97%8D&callback=myapp://callback%3Fstate%3Da%2Bb%252Bc%26next%3D1&permission=read:account")
+
+    // A form-urlencoded parser (what the Misskey frontend uses) recovers the originals.
+    let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+    let queryItems = Dictionary(uniqueKeysWithValues: (components.queryItems ?? []).map { ($0.name, $0.value ?? "") })
+    #expect(queryItems["name"] == "Foo & Bar+Baz 藍")
+    #expect(queryItems["callback"] == "myapp://callback?state=a+b%2Bc&next=1")
+    #expect(queryItems["permission"] == "read:account")
+}

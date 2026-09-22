@@ -70,13 +70,13 @@ public struct MiAuthRequest: Hashable, Sendable {
         )
         components.path = "/miauth/\(sessionID.rawValue)"
 
-        var queryItems = [URLQueryItem(name: "name", value: appName)]
+        var queryItems = [try Self.queryItem(name: "name", value: appName)]
         if let iconURL {
-            queryItems.append(URLQueryItem(name: "icon", value: iconURL.absoluteString))
+            queryItems.append(try Self.queryItem(name: "icon", value: iconURL.absoluteString))
         }
         if let callbackURL {
             _ = try callbackComponents(from: callbackURL)
-            queryItems.append(URLQueryItem(name: "callback", value: callbackURL.absoluteString))
+            queryItems.append(try Self.queryItem(name: "callback", value: callbackURL.absoluteString))
         }
         if !permissions.isEmpty {
             // Misskey's `miauth/gen-token` rejects duplicate permissions (`uniqueItems: true`),
@@ -85,9 +85,9 @@ public struct MiAuthRequest: Hashable, Sendable {
             var seen = Set<MiAuthPermission>()
             let unique = permissions.filter { seen.insert($0).inserted }
             let permission = unique.map(\.rawValue).joined(separator: ",")
-            queryItems.append(URLQueryItem(name: "permission", value: permission))
+            queryItems.append(try Self.queryItem(name: "permission", value: permission))
         }
-        components.queryItems = queryItems
+        components.percentEncodedQueryItems = queryItems
 
         guard let url = components.url else {
             throw MiAuthError.failedAuthorizationURLConstruction
@@ -137,6 +137,23 @@ public struct MiAuthRequest: Hashable, Sendable {
         }
 
         return MiAuthCallback(sessionID: callbackSessionID)
+    }
+
+    /// Characters left unencoded in query values.
+    ///
+    /// `URLComponents.queryItems` follows RFC 3986 and leaves `+` alone, but the Misskey
+    /// frontend parses the query as `application/x-www-form-urlencoded`, where `+` means a
+    /// space. Encoding everything outside this set, including `+`, keeps app names and
+    /// callback URLs intact on both sides.
+    private static let queryValueAllowed = CharacterSet(
+        charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/,"
+    )
+
+    private static func queryItem(name: String, value: String) throws -> URLQueryItem {
+        guard let encoded = value.addingPercentEncoding(withAllowedCharacters: queryValueAllowed) else {
+            throw MiAuthError.failedAuthorizationURLConstruction
+        }
+        return URLQueryItem(name: name, value: encoded)
     }
 
     /// Schemes the Misskey authorization page refuses to redirect to.
