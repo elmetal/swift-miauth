@@ -41,8 +41,8 @@ extension MiAuthPermission {
     /// A resource that MiAuth permissions refer to.
     ///
     /// Conforming types describe one resource segment, such as `account` in `read:account`.
-    /// They gain ``read`` by also conforming to ``Readable``, and ``write`` by conforming to
-    /// ``Writable``.
+    /// They gain ``Readable/read`` by also conforming to ``Readable``, and ``Writable/write``
+    /// by conforming to ``Writable``.
     public protocol Resource: Sendable {
         /// The resource segment of the permission string.
         var name: String { get }
