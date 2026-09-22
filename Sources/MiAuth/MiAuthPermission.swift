@@ -38,6 +38,11 @@ public extension MiAuthPermission {
     static let writeAccount = MiAuthPermission("write:account")
 
     /// Permission to read notes.
+    ///
+    /// - Warning: Misskey doesn't define a `read:notes` permission. Reading notes needs no
+    ///   permission, and the authorization page silently drops unknown values. This constant
+    ///   will be removed in a future release.
+    @available(*, deprecated, message: "Misskey doesn't define read:notes; the authorization page ignores it. Reading notes needs no permission.")
     static let readNotes = MiAuthPermission("read:notes")
 
     /// Permission to create or update notes.

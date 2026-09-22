@@ -6,6 +6,7 @@ import Testing
     let request = MiAuthRequest(
         instanceURL: try #require(URL(string: "https://misskey.example")),
         appName: "MiAuth Example",
+        iconURL: URL(string: "https://app.example/icon.png"),
         callbackURL: URL(string: "miauth-example://callback")!,
         permissions: [.readAccount, .writeNotes],
         sessionID: try MiAuthSessionID("fixed-session")
@@ -19,6 +20,7 @@ import Testing
     #expect(components.host == "misskey.example")
     #expect(components.path == "/miauth/fixed-session")
     #expect(queryItems["name"] == "MiAuth Example")
+    #expect(queryItems["icon"] == "https://app.example/icon.png")
     #expect(queryItems["callback"] == "miauth-example://callback")
     #expect(queryItems["permission"] == "read:account,write:notes")
 }
@@ -34,8 +36,11 @@ import Testing
     let url = try request.authorizationURL()
     let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
     let permission = components.queryItems?.first { $0.name == "permission" }?.value
+    let names = components.queryItems?.map(\.name) ?? []
 
     #expect(permission == "read:account,custom:capability")
+    #expect(!names.contains("icon"))
+    #expect(!names.contains("callback"))
 }
 
 @Test func invalidInstanceURLsAreRejected() throws {

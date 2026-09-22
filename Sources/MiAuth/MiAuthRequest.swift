@@ -8,6 +8,9 @@ public struct MiAuthRequest: Hashable, Sendable {
     /// The application name to display on the authorization page.
     public let appName: String
 
+    /// The URL of an icon image to display on the authorization page.
+    public let iconURL: URL?
+
     /// The URL the instance opens after authorization completes.
     public let callbackURL: URL?
 
@@ -25,6 +28,7 @@ public struct MiAuthRequest: Hashable, Sendable {
     /// - Parameters:
     ///   - instanceURL: The base URL of a Misskey-compatible instance.
     ///   - appName: The application name to display on the authorization page.
+    ///   - iconURL: The URL of an icon image to display on the authorization page.
     ///   - callbackURL: The URL the instance opens after authorization completes.
     ///   - permissions: The permissions to request from the user.
     ///   - sessionID: The session identifier to use for the flow.
@@ -32,6 +36,7 @@ public struct MiAuthRequest: Hashable, Sendable {
     public init(
         instanceURL: URL,
         appName: String,
+        iconURL: URL? = nil,
         callbackURL: URL? = nil,
         permissions: [MiAuthPermission] = [],
         sessionID: MiAuthSessionID = .generate(),
@@ -39,6 +44,7 @@ public struct MiAuthRequest: Hashable, Sendable {
     ) {
         self.instanceURL = instanceURL
         self.appName = appName
+        self.iconURL = iconURL
         self.callbackURL = callbackURL
         self.permissions = permissions
         self.sessionID = sessionID
@@ -57,6 +63,9 @@ public struct MiAuthRequest: Hashable, Sendable {
         components.path = "/miauth/\(sessionID.rawValue)"
 
         var queryItems = [URLQueryItem(name: "name", value: appName)]
+        if let iconURL {
+            queryItems.append(URLQueryItem(name: "icon", value: iconURL.absoluteString))
+        }
         if let callbackURL {
             guard callbackURL.scheme != nil else {
                 throw MiAuthError.invalidCallbackURL

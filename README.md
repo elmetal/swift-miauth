@@ -8,7 +8,7 @@ It helps you:
 - generate safe session IDs
 - represent known and custom permissions
 - validate MiAuth callback session values
-- exchange an approved session for an access token
+- exchange an approved session for an access token and the authorizing user
 
 It does not present browser UI, store tokens, manage accounts, or wrap the rest of the Misskey API.
 
@@ -37,6 +37,7 @@ let instanceURL = URL(string: "https://misskey.example")!
 let request = MiAuthRequest(
     instanceURL: instanceURL,
     appName: "MiAuth Example",
+    iconURL: URL(string: "https://example.com/icon.png"),
     callbackURL: URL(string: "miauth-example://callback")!,
     permissions: [.readAccount, .writeNotes]
 )
@@ -51,11 +52,16 @@ let client = MiAuthClient(instanceURL: instanceURL)
 let result = try await client.check(sessionID: callback.sessionID)
 
 let token = result.token
+let username = result.user?.username
 ```
+
+`check(sessionID:)` succeeds only once per session. Misskey marks the token as fetched on the first successful check, and every later check for the same session fails with `MiAuthError.authorizationNotCompletedOrDenied`. Store the token as soon as you receive it, and don't retry a check that already returned a token.
+
+The same error is thrown while the user hasn't approved the request yet, and when the user denied it. The instance reports all three cases as `{"ok": false}`, so the package can't tell them apart.
 
 ## Custom Permissions
 
-Misskey-compatible servers may add permission strings over time, so permissions are open-ended:
+Misskey-compatible servers may add permission strings over time, so permissions are open-ended. Note that the authorization page silently drops permission values the instance doesn't know, so a typo or an unsupported permission results in a token without that permission rather than an error.
 
 ```swift
 let permissions: [MiAuthPermission] = [
@@ -86,7 +92,9 @@ let client = MiAuthClient(
 
 The implemented flow follows the Misskey Hub MiAuth shape:
 
-- authorization page: `https://{host}/miauth/{session}`
+- authorization page: `https://{host}/miauth/{session}?name=...&icon=...&callback=...&permission=...`
+- callback: the instance appends `session={session}` to the callback URL
 - check endpoint: `POST https://{host}/api/miauth/{session}/check`
+- check response: `{"ok": true, "token": "...", "user": {...}}` on success, `{"ok": false}` otherwise
 
 See the official Misskey Hub documentation: <https://misskey-hub.net/en/docs/for-developers/api/token/miauth/>

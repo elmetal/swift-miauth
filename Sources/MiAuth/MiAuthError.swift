@@ -23,6 +23,9 @@ public enum MiAuthError: Error, Equatable, Sendable {
     /// The response body couldn't be decoded as a supported MiAuth response.
     case invalidResponseBody
 
-    /// The user hasn't completed the authorization flow, or denied the request.
+    /// The user hasn't completed the authorization flow, denied the request, or the session
+    /// was already checked once.
+    ///
+    /// The instance reports all three cases the same way, with `{"ok": false}`.
     case authorizationNotCompletedOrDenied
 }
