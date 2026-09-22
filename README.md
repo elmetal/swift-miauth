@@ -1,5 +1,7 @@
 # swift-miauth
 
+[![CI](https://github.com/elmetal/swift-miauth/actions/workflows/ci.yml/badge.svg)](https://github.com/elmetal/swift-miauth/actions/workflows/ci.yml)
+
 `swift-miauth` is a small Swift package for the protocol-level MiAuth flow used by Misskey-compatible servers.
 
 It helps you:
