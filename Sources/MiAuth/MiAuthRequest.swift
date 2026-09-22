@@ -98,7 +98,9 @@ public struct MiAuthRequest: Hashable, Sendable {
     /// Validates a callback URL and returns its MiAuth session information.
     ///
     /// The callback must match the request's callback URL and include a `session` query
-    /// item that matches ``sessionID``.
+    /// item that matches ``sessionID``. The scheme and host are compared case-insensitively;
+    /// the port, path, and any query items the request's callback URL carried must match
+    /// exactly.
     ///
     /// - Parameter url: The callback URL received by your app.
     /// - Returns: The validated MiAuth callback.
@@ -111,8 +113,10 @@ public struct MiAuthRequest: Hashable, Sendable {
         let expected = try callbackComponents(from: callbackURL)
         let actual = try callbackComponents(from: url)
 
-        guard expected.scheme == actual.scheme,
-              expected.host == actual.host,
+        // Schemes and hosts are case-insensitive (RFC 3986 §3.1, §3.2.2), and the WHATWG URL
+        // parser Misskey redirects through lowercases both, so compare them case-insensitively.
+        guard expected.scheme?.lowercased() == actual.scheme?.lowercased(),
+              expected.host?.lowercased() == actual.host?.lowercased(),
               expected.port == actual.port,
               expected.path == actual.path
         else {

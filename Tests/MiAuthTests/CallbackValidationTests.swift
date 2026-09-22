@@ -33,3 +33,22 @@ import Testing
         try request.validateCallbackURL(try #require(URL(string: "miauth-example://other?session=expected-session")))
     }
 }
+
+@Test func callbackValidationIgnoresSchemeAndHostCase() throws {
+    let request = MiAuthRequest(
+        instanceURL: try #require(URL(string: "https://misskey.example")),
+        appName: "MiAuth Example",
+        callbackURL: try #require(URL(string: "https://App.Example/Callback")),
+        sessionID: try MiAuthSessionID("case-session")
+    )
+
+    // WHATWG URL lowercases scheme and host on redirect; the path keeps its case.
+    let callback = try #require(URL(string: "https://app.example/Callback?session=case-session"))
+    let result = try request.validateCallbackURL(callback)
+
+    #expect(result.sessionID == (try MiAuthSessionID("case-session")))
+
+    #expect(throws: MiAuthError.invalidCallbackURL) {
+        try request.validateCallbackURL(try #require(URL(string: "https://app.example/callback?session=case-session")))
+    }
+}
