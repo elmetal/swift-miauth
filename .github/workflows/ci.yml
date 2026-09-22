@@ -20,16 +20,12 @@ jobs:
           # Oldest supported toolchain (Swift 6.1, tools-version 6.0).
           - runner: macos-15
             xcode: "16.4"
-            ios: true
-          # Oldest Xcode 26. Non-default Xcodes on the runner image ship without
-          # simulator runtimes, so this entry only runs the macOS tests.
+          # Oldest Xcode 26.
           - runner: macos-26
             xcode: "26.0.1"
-            ios: false
           # Newest available.
           - runner: macos-26
             xcode: "26.6"
-            ios: true
     env:
       DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
     steps:
@@ -38,8 +34,11 @@ jobs:
         run: swift --version
       - name: Test (macOS)
         run: swift test
+      # The package has no platform-specific code, so one iOS build is enough to
+      # show it resolves for iOS. Only the image's default Xcode ships the
+      # simulator runtime this needs.
       - name: Build (iOS Simulator)
-        if: matrix.ios
+        if: matrix.xcode == '26.6'
         run: |
           xcodebuild build \
             -scheme MiAuth \
