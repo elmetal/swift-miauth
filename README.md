@@ -85,7 +85,7 @@ let client = MiAuthClient(
 
 - HTTPS instance URLs are required by default.
 - HTTP can be allowed explicitly for local development with `allowsInsecureHTTP: true`.
-- Session IDs are generated from system randomness and encoded as 64 hex characters by default.
+- Session IDs are random version 4 UUIDs by default, as the MiAuth specification asks. `MiAuthSessionID.generate(byteCount:)` produces a longer hexadecimal identifier if you need one.
 - Tokens are returned to the caller and are never persisted by this package.
 
 ## MiAuth Reference
