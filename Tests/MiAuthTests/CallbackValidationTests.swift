@@ -45,8 +45,9 @@ import Testing
     // WHATWG URL lowercases scheme and host on redirect; the path keeps its case.
     let callback = try #require(URL(string: "https://app.example/Callback?session=case-session"))
     let result = try request.validateCallbackURL(callback)
+    let expectedSessionID = try MiAuthSessionID("case-session")
 
-    #expect(result.sessionID == (try MiAuthSessionID("case-session")))
+    #expect(result.sessionID == expectedSessionID)
 
     #expect(throws: MiAuthError.invalidCallbackURL) {
         try request.validateCallbackURL(try #require(URL(string: "https://app.example/callback?session=case-session")))
