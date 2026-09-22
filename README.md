@@ -59,13 +59,16 @@ let username = result.user?.username
 
 The same error is thrown while the user hasn't approved the request yet, and when the user denied it. The instance reports all three cases as `{"ok": false}`, so the package can't tell them apart.
 
-## Custom Permissions
+## Permissions
+
+`MiAuthPermission` provides a constant for every non-administrative permission Misskey defines, such as `.readAccount`, `.writeNotes`, `.readNotifications`, or `.writeReactions`.
 
 Misskey-compatible servers may add permission strings over time, so permissions are open-ended. Note that the authorization page silently drops permission values the instance doesn't know, so a typo or an unsupported permission results in a token without that permission rather than an error.
 
 ```swift
 let permissions: [MiAuthPermission] = [
     .readAccount,
+    MiAuthPermission("read:admin:meta"),
     MiAuthPermission("custom:capability"),
 ]
 ```
