@@ -34,9 +34,6 @@ jobs:
         run: swift --version
       - name: Test (macOS)
         run: swift test
-      # The package has no platform-specific code, so one iOS build is enough to
-      # show it resolves for iOS. Only the image's default Xcode ships the
-      # simulator runtime this needs.
       - name: Build (iOS Simulator)
         if: matrix.xcode == '26.6'
         run: |
