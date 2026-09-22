@@ -102,3 +102,18 @@ import Testing
         _ = try request.authorizationURL()
     }
 }
+
+@Test func authorizationURLRemovesDuplicatePermissionsKeepingOrder() throws {
+    let request = MiAuthRequest(
+        instanceURL: try #require(URL(string: "https://misskey.example")),
+        appName: "dupes",
+        permissions: [.notes.write, .account.read, .notes.write, "custom:capability", .account.read],
+        sessionID: try MiAuthSessionID("session-dupes")
+    )
+
+    let url = try request.authorizationURL()
+    let components = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
+    let permission = components.queryItems?.first { $0.name == "permission" }?.value
+
+    #expect(permission == "write:notes,read:account,custom:capability")
+}

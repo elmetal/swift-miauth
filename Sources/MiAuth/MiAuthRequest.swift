@@ -15,6 +15,9 @@ public struct MiAuthRequest: Hashable, Sendable {
     public let callbackURL: URL?
 
     /// The permissions to request from the user.
+    ///
+    /// Duplicates are removed when building the authorization URL, because Misskey rejects
+    /// them at approval time.
     public let permissions: [MiAuthPermission]
 
     /// The session identifier that correlates authorization and check requests.
@@ -76,7 +79,12 @@ public struct MiAuthRequest: Hashable, Sendable {
             queryItems.append(URLQueryItem(name: "callback", value: callbackURL.absoluteString))
         }
         if !permissions.isEmpty {
-            let permission = permissions.map(\.rawValue).joined(separator: ",")
+            // Misskey's `miauth/gen-token` rejects duplicate permissions (`uniqueItems: true`),
+            // and that failure surfaces only after the user taps approve. Drop duplicates here,
+            // keeping the first occurrence so the authorization page lists them in order.
+            var seen = Set<MiAuthPermission>()
+            let unique = permissions.filter { seen.insert($0).inserted }
+            let permission = unique.map(\.rawValue).joined(separator: ",")
             queryItems.append(URLQueryItem(name: "permission", value: permission))
         }
         components.queryItems = queryItems
