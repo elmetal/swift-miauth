@@ -64,3 +64,41 @@ import Testing
         _ = try pathRequest.authorizationURL()
     }
 }
+
+@Test func blockedCallbackSchemesAreRejected() throws {
+    let blocked = [
+        "javascript:alert(1)",
+        "file:///etc/hosts",
+        "data:text/html,hi",
+        "mailto:user@example.com",
+        "tel:+810000000000",
+        "vbscript:msgbox",
+        "JAVASCRIPT:alert(1)",
+    ]
+
+    for raw in blocked {
+        let request = MiAuthRequest(
+            instanceURL: try #require(URL(string: "https://misskey.example")),
+            appName: "bad",
+            callbackURL: try #require(URL(string: raw)),
+            sessionID: try MiAuthSessionID("session")
+        )
+
+        #expect(throws: MiAuthError.invalidCallbackURL, "\(raw) should be rejected") {
+            _ = try request.authorizationURL()
+        }
+    }
+}
+
+@Test func callbackWithoutSchemeIsRejected() throws {
+    let request = MiAuthRequest(
+        instanceURL: try #require(URL(string: "https://misskey.example")),
+        appName: "bad",
+        callbackURL: try #require(URL(string: "callback")),
+        sessionID: try MiAuthSessionID("session")
+    )
+
+    #expect(throws: MiAuthError.invalidCallbackURL) {
+        _ = try request.authorizationURL()
+    }
+}

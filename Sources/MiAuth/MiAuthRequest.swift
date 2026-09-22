@@ -53,6 +53,11 @@ public struct MiAuthRequest: Hashable, Sendable {
 
     /// Creates the authorization URL to open in a browser.
     ///
+    /// The callback URL must have a scheme, and the scheme must not be one the Misskey
+    /// authorization page refuses to redirect to: `javascript`, `file`, `data`, `mailto`,
+    /// `tel`, or `vbscript`. Rejecting those here surfaces the mistake before the user
+    /// reaches the authorization page.
+    ///
     /// - Returns: A URL that starts the MiAuth authorization flow.
     /// - Throws: A ``MiAuthError`` value if the instance or callback URL is invalid.
     public func authorizationURL() throws -> URL {
@@ -67,9 +72,7 @@ public struct MiAuthRequest: Hashable, Sendable {
             queryItems.append(URLQueryItem(name: "icon", value: iconURL.absoluteString))
         }
         if let callbackURL {
-            guard callbackURL.scheme != nil else {
-                throw MiAuthError.invalidCallbackURL
-            }
+            _ = try callbackComponents(from: callbackURL)
             queryItems.append(URLQueryItem(name: "callback", value: callbackURL.absoluteString))
         }
         if !permissions.isEmpty {
@@ -128,9 +131,15 @@ public struct MiAuthRequest: Hashable, Sendable {
         return MiAuthCallback(sessionID: callbackSessionID)
     }
 
+    /// Schemes the Misskey authorization page refuses to redirect to.
+    private static let blockedCallbackSchemes: Set<String> = [
+        "javascript", "file", "data", "mailto", "tel", "vbscript",
+    ]
+
     private func callbackComponents(from url: URL) throws -> URLComponents {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              components.scheme != nil
+              let scheme = components.scheme?.lowercased(),
+              !Self.blockedCallbackSchemes.contains(scheme)
         else {
             throw MiAuthError.invalidCallbackURL
         }
