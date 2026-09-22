@@ -29,27 +29,45 @@ private let misskeyNonAdminPermissions: Set<String> = [
     "write:chat", "read:chat",
 ]
 
-private let allConstants: [MiAuthPermission] = [
-    .readAccount, .writeAccount,
-    .writeNotes, .readReactions, .writeReactions, .writeVotes,
-    .readFavorites, .writeFavorites, .readClipFavorite, .writeClipFavorite,
-    .readFollowing, .writeFollowing, .readBlocks, .writeBlocks, .readMutes, .writeMutes,
-    .writeReportAbuse,
-    .readNotifications, .writeNotifications,
-    .readDrive, .writeDrive,
-    .readChat, .writeChat, .readMessaging, .writeMessaging, .readUserGroups, .writeUserGroups,
-    .readPages, .writePages, .readPageLikes, .writePageLikes,
-    .readGallery, .writeGallery, .readGalleryLikes, .writeGalleryLikes,
-    .readFlash, .writeFlash, .readFlashLikes, .writeFlashLikes,
-    .readChannels, .writeChannels, .readFederation,
-    .readInviteCodes, .writeInviteCodes,
+private let allPermissions: [MiAuthPermission] = [
+    .account.read, .account.write,
+    .notes.write,
+    .reactions.read, .reactions.write,
+    .votes.write,
+    .favorites.read, .favorites.write,
+    .clipFavorite.read, .clipFavorite.write,
+    .following.read, .following.write,
+    .blocks.read, .blocks.write,
+    .mutes.read, .mutes.write,
+    .reportAbuse.write,
+    .notifications.read, .notifications.write,
+    .drive.read, .drive.write,
+    .chat.read, .chat.write,
+    .messaging.read, .messaging.write,
+    .userGroups.read, .userGroups.write,
+    .pages.read, .pages.write,
+    .pageLikes.read, .pageLikes.write,
+    .gallery.read, .gallery.write,
+    .galleryLikes.read, .galleryLikes.write,
+    .flash.read, .flash.write,
+    .flashLikes.read, .flashLikes.write,
+    .channels.read, .channels.write,
+    .federation.read,
+    .inviteCodes.read, .inviteCodes.write,
 ]
 
-@Test func permissionConstantsMatchMisskeyNonAdminList() {
-    let rawValues = Set(allConstants.map(\.rawValue))
+@Test func resourcePermissionsMatchMisskeyNonAdminList() {
+    let rawValues = Set(allPermissions.map(\.rawValue))
 
     #expect(rawValues == misskeyNonAdminPermissions)
-    #expect(allConstants.count == misskeyNonAdminPermissions.count, "no duplicate constants")
+    #expect(allPermissions.count == misskeyNonAdminPermissions.count, "no duplicate permissions")
+}
+
+@Test func resourcePermissionsUseReadAndWritePrefixes() {
+    #expect(MiAuthPermission.account.read.rawValue == "read:account")
+    #expect(MiAuthPermission.account.write.rawValue == "write:account")
+    #expect(MiAuthPermission.pageLikes.read.rawValue == "read:page-likes")
+    #expect(MiAuthPermission.notes.write.rawValue == "write:notes")
 }
 
 @Test func stringLiteralsAndRawValuesProduceEqualPermissions() {
@@ -57,4 +75,5 @@ private let allConstants: [MiAuthPermission] = [
 
     #expect(literal == MiAuthPermission("read:admin:meta"))
     #expect(literal == MiAuthPermission(rawValue: "read:admin:meta"))
+    #expect(MiAuthPermission("read:account") == .account.read)
 }

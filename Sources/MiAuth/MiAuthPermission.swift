@@ -1,7 +1,12 @@
 /// A permission string requested during MiAuth authorization.
 ///
-/// Misskey-compatible instances may support additional permission values, so this type
-/// accepts both known constants and custom raw strings.
+/// Misskey permissions take the form `read:{resource}` or `write:{resource}`. Use the
+/// resource properties to build them, such as `.account.read` or `.notes.write`. Only the
+/// combinations Misskey defines exist, so `.notes.read` doesn't compile.
+///
+/// Misskey-compatible instances may support additional permission values, and Misskey's
+/// administrative permissions (`read:admin:*`, `write:admin:*`) aren't modeled here, so this
+/// type also accepts raw strings.
 public struct MiAuthPermission: RawRepresentable, Hashable, Sendable {
     /// The raw permission value sent to the instance.
     public let rawValue: String
@@ -30,179 +35,259 @@ extension MiAuthPermission: ExpressibleByStringLiteral {
     }
 }
 
-/// Permissions defined by Misskey.
+// MARK: - Resources
+
+extension MiAuthPermission {
+    /// A resource that MiAuth permissions refer to.
+    ///
+    /// Conforming types describe one resource segment, such as `account` in `read:account`.
+    /// They gain ``read`` by also conforming to ``Readable``, and ``write`` by conforming to
+    /// ``Writable``.
+    public protocol Resource: Sendable {
+        /// The resource segment of the permission string.
+        var name: String { get }
+    }
+
+    /// A resource that Misskey allows reading.
+    public protocol Readable: Resource {}
+
+    /// A resource that Misskey allows writing.
+    public protocol Writable: Resource {}
+}
+
+public extension MiAuthPermission.Readable {
+    /// The `read:{resource}` permission for this resource.
+    var read: MiAuthPermission {
+        MiAuthPermission("read:\(name)")
+    }
+}
+
+public extension MiAuthPermission.Writable {
+    /// The `write:{resource}` permission for this resource.
+    var write: MiAuthPermission {
+        MiAuthPermission("write:\(name)")
+    }
+}
+
+/// The non-administrative resources defined by Misskey.
 ///
-/// These constants mirror the non-administrative entries of the `permissions` list in
-/// `misskey-js`. Administrative permissions (`read:admin:*`, `write:admin:*`) and
-/// permissions added by forks can be passed as raw strings.
+/// These mirror the `permissions` list in `misskey-js`.
 public extension MiAuthPermission {
     // MARK: Account
 
-    /// Permission to read account information.
-    static let readAccount = MiAuthPermission("read:account")
+    /// The account resource, for `read:account` and `write:account`.
+    struct Account: Readable, Writable {
+        public let name = "account"
+    }
 
-    /// Permission to update account information.
-    static let writeAccount = MiAuthPermission("write:account")
+    /// The account resource.
+    static let account = Account()
 
     // MARK: Notes
 
-    /// Permission to read notes.
+    /// The notes resource, for `write:notes`.
     ///
-    /// - Warning: Misskey doesn't define a `read:notes` permission. Reading notes needs no
-    ///   permission, and the authorization page silently drops unknown values. This constant
-    ///   will be removed in a future release.
-    @available(*, deprecated, message: "Misskey doesn't define read:notes; the authorization page ignores it. Reading notes needs no permission.")
-    static let readNotes = MiAuthPermission("read:notes")
+    /// Reading notes needs no permission, so Misskey defines no `read:notes`.
+    struct Notes: Writable {
+        public let name = "notes"
+    }
 
-    /// Permission to create or delete notes.
-    static let writeNotes = MiAuthPermission("write:notes")
+    /// The notes resource.
+    static let notes = Notes()
 
-    /// Permission to read reactions.
-    static let readReactions = MiAuthPermission("read:reactions")
+    /// The reactions resource, for `read:reactions` and `write:reactions`.
+    struct Reactions: Readable, Writable {
+        public let name = "reactions"
+    }
 
-    /// Permission to add or remove reactions.
-    static let writeReactions = MiAuthPermission("write:reactions")
+    /// The reactions resource.
+    static let reactions = Reactions()
 
-    /// Permission to vote in polls.
-    static let writeVotes = MiAuthPermission("write:votes")
+    /// The poll votes resource, for `write:votes`.
+    struct Votes: Writable {
+        public let name = "votes"
+    }
 
-    /// Permission to read favorites.
-    static let readFavorites = MiAuthPermission("read:favorites")
+    /// The poll votes resource.
+    static let votes = Votes()
 
-    /// Permission to update favorites.
-    static let writeFavorites = MiAuthPermission("write:favorites")
+    /// The favorites resource, for `read:favorites` and `write:favorites`.
+    struct Favorites: Readable, Writable {
+        public let name = "favorites"
+    }
 
-    /// Permission to read favorited clips.
-    static let readClipFavorite = MiAuthPermission("read:clip-favorite")
+    /// The favorites resource.
+    static let favorites = Favorites()
 
-    /// Permission to favorite or unfavorite clips.
-    static let writeClipFavorite = MiAuthPermission("write:clip-favorite")
+    /// The clip favorites resource, for `read:clip-favorite` and `write:clip-favorite`.
+    struct ClipFavorite: Readable, Writable {
+        public let name = "clip-favorite"
+    }
+
+    /// The clip favorites resource.
+    static let clipFavorite = ClipFavorite()
 
     // MARK: Relationships
 
-    /// Permission to read following relationships.
-    static let readFollowing = MiAuthPermission("read:following")
+    /// The following resource, for `read:following` and `write:following`.
+    struct Following: Readable, Writable {
+        public let name = "following"
+    }
 
-    /// Permission to update following relationships.
-    static let writeFollowing = MiAuthPermission("write:following")
+    /// The following resource.
+    static let following = Following()
 
-    /// Permission to read blocked users.
-    static let readBlocks = MiAuthPermission("read:blocks")
+    /// The blocks resource, for `read:blocks` and `write:blocks`.
+    struct Blocks: Readable, Writable {
+        public let name = "blocks"
+    }
 
-    /// Permission to block or unblock users.
-    static let writeBlocks = MiAuthPermission("write:blocks")
+    /// The blocks resource.
+    static let blocks = Blocks()
 
-    /// Permission to read muted users.
-    static let readMutes = MiAuthPermission("read:mutes")
+    /// The mutes resource, for `read:mutes` and `write:mutes`.
+    struct Mutes: Readable, Writable {
+        public let name = "mutes"
+    }
 
-    /// Permission to mute or unmute users.
-    static let writeMutes = MiAuthPermission("write:mutes")
+    /// The mutes resource.
+    static let mutes = Mutes()
 
-    /// Permission to report abuse.
-    static let writeReportAbuse = MiAuthPermission("write:report-abuse")
+    /// The abuse report resource, for `write:report-abuse`.
+    struct ReportAbuse: Writable {
+        public let name = "report-abuse"
+    }
+
+    /// The abuse report resource.
+    static let reportAbuse = ReportAbuse()
 
     // MARK: Notifications
 
-    /// Permission to read notifications.
-    static let readNotifications = MiAuthPermission("read:notifications")
+    /// The notifications resource, for `read:notifications` and `write:notifications`.
+    struct Notifications: Readable, Writable {
+        public let name = "notifications"
+    }
 
-    /// Permission to update notifications.
-    static let writeNotifications = MiAuthPermission("write:notifications")
+    /// The notifications resource.
+    static let notifications = Notifications()
 
     // MARK: Drive
 
-    /// Permission to read drive files.
-    static let readDrive = MiAuthPermission("read:drive")
+    /// The drive resource, for `read:drive` and `write:drive`.
+    struct Drive: Readable, Writable {
+        public let name = "drive"
+    }
 
-    /// Permission to update drive files.
-    static let writeDrive = MiAuthPermission("write:drive")
+    /// The drive resource.
+    static let drive = Drive()
 
     // MARK: Chat and messaging
 
-    /// Permission to read chat messages.
-    static let readChat = MiAuthPermission("read:chat")
+    /// The chat resource, for `read:chat` and `write:chat`.
+    struct Chat: Readable, Writable {
+        public let name = "chat"
+    }
 
-    /// Permission to send chat messages.
-    static let writeChat = MiAuthPermission("write:chat")
+    /// The chat resource.
+    static let chat = Chat()
 
-    /// Permission to read legacy direct messages.
+    /// The legacy direct messaging resource, for `read:messaging` and `write:messaging`.
     ///
     /// Misskey removed the messaging feature in version 13. The permission remains in the
     /// list for forks that still provide it.
-    static let readMessaging = MiAuthPermission("read:messaging")
+    struct Messaging: Readable, Writable {
+        public let name = "messaging"
+    }
 
-    /// Permission to send legacy direct messages.
-    ///
-    /// Misskey removed the messaging feature in version 13. The permission remains in the
-    /// list for forks that still provide it.
-    static let writeMessaging = MiAuthPermission("write:messaging")
+    /// The legacy direct messaging resource.
+    static let messaging = Messaging()
 
-    /// Permission to read legacy user groups.
-    ///
-    /// Misskey removed user groups in version 13. The permission remains in the list for
-    /// forks that still provide them.
-    static let readUserGroups = MiAuthPermission("read:user-groups")
-
-    /// Permission to update legacy user groups.
+    /// The legacy user groups resource, for `read:user-groups` and `write:user-groups`.
     ///
     /// Misskey removed user groups in version 13. The permission remains in the list for
     /// forks that still provide them.
-    static let writeUserGroups = MiAuthPermission("write:user-groups")
+    struct UserGroups: Readable, Writable {
+        public let name = "user-groups"
+    }
+
+    /// The legacy user groups resource.
+    static let userGroups = UserGroups()
 
     // MARK: Pages, gallery, and Play
 
-    /// Permission to read pages.
-    static let readPages = MiAuthPermission("read:pages")
+    /// The pages resource, for `read:pages` and `write:pages`.
+    struct Pages: Readable, Writable {
+        public let name = "pages"
+    }
 
-    /// Permission to create or update pages.
-    static let writePages = MiAuthPermission("write:pages")
+    /// The pages resource.
+    static let pages = Pages()
 
-    /// Permission to read page likes.
-    static let readPageLikes = MiAuthPermission("read:page-likes")
+    /// The page likes resource, for `read:page-likes` and `write:page-likes`.
+    struct PageLikes: Readable, Writable {
+        public let name = "page-likes"
+    }
 
-    /// Permission to like or unlike pages.
-    static let writePageLikes = MiAuthPermission("write:page-likes")
+    /// The page likes resource.
+    static let pageLikes = PageLikes()
 
-    /// Permission to read gallery posts.
-    static let readGallery = MiAuthPermission("read:gallery")
+    /// The gallery resource, for `read:gallery` and `write:gallery`.
+    struct Gallery: Readable, Writable {
+        public let name = "gallery"
+    }
 
-    /// Permission to create or update gallery posts.
-    static let writeGallery = MiAuthPermission("write:gallery")
+    /// The gallery resource.
+    static let gallery = Gallery()
 
-    /// Permission to read gallery likes.
-    static let readGalleryLikes = MiAuthPermission("read:gallery-likes")
+    /// The gallery likes resource, for `read:gallery-likes` and `write:gallery-likes`.
+    struct GalleryLikes: Readable, Writable {
+        public let name = "gallery-likes"
+    }
 
-    /// Permission to like or unlike gallery posts.
-    static let writeGalleryLikes = MiAuthPermission("write:gallery-likes")
+    /// The gallery likes resource.
+    static let galleryLikes = GalleryLikes()
 
-    /// Permission to read Play scripts.
-    static let readFlash = MiAuthPermission("read:flash")
+    /// The Play scripts resource, for `read:flash` and `write:flash`.
+    struct Flash: Readable, Writable {
+        public let name = "flash"
+    }
 
-    /// Permission to create or update Play scripts.
-    static let writeFlash = MiAuthPermission("write:flash")
+    /// The Play scripts resource.
+    static let flash = Flash()
 
-    /// Permission to read Play likes.
-    static let readFlashLikes = MiAuthPermission("read:flash-likes")
+    /// The Play likes resource, for `read:flash-likes` and `write:flash-likes`.
+    struct FlashLikes: Readable, Writable {
+        public let name = "flash-likes"
+    }
 
-    /// Permission to like or unlike Play scripts.
-    static let writeFlashLikes = MiAuthPermission("write:flash-likes")
+    /// The Play likes resource.
+    static let flashLikes = FlashLikes()
 
     // MARK: Channels and federation
 
-    /// Permission to read channels.
-    static let readChannels = MiAuthPermission("read:channels")
+    /// The channels resource, for `read:channels` and `write:channels`.
+    struct Channels: Readable, Writable {
+        public let name = "channels"
+    }
 
-    /// Permission to create or update channels.
-    static let writeChannels = MiAuthPermission("write:channels")
+    /// The channels resource.
+    static let channels = Channels()
 
-    /// Permission to read federation information.
-    static let readFederation = MiAuthPermission("read:federation")
+    /// The federation resource, for `read:federation`.
+    struct Federation: Readable {
+        public let name = "federation"
+    }
+
+    /// The federation resource.
+    static let federation = Federation()
 
     // MARK: Invitations
 
-    /// Permission to read invite codes.
-    static let readInviteCodes = MiAuthPermission("read:invite-codes")
+    /// The invite codes resource, for `read:invite-codes` and `write:invite-codes`.
+    struct InviteCodes: Readable, Writable {
+        public let name = "invite-codes"
+    }
 
-    /// Permission to create invite codes.
-    static let writeInviteCodes = MiAuthPermission("write:invite-codes")
+    /// The invite codes resource.
+    static let inviteCodes = InviteCodes()
 }

@@ -8,7 +8,7 @@ import Testing
         appName: "MiAuth Example",
         iconURL: URL(string: "https://app.example/icon.png"),
         callbackURL: URL(string: "miauth-example://callback")!,
-        permissions: [.readAccount, .writeNotes],
+        permissions: [.account.read, .notes.write],
         sessionID: try MiAuthSessionID("fixed-session")
     )
 
@@ -29,7 +29,7 @@ import Testing
     let request = MiAuthRequest(
         instanceURL: try #require(URL(string: "https://misskey.example/")),
         appName: "custom",
-        permissions: [.readAccount, MiAuthPermission("custom:capability")],
+        permissions: [.account.read, MiAuthPermission("custom:capability")],
         sessionID: try MiAuthSessionID("session-custom")
     )
 

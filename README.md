@@ -39,7 +39,7 @@ let request = MiAuthRequest(
     appName: "MiAuth Example",
     iconURL: URL(string: "https://example.com/icon.png"),
     callbackURL: URL(string: "miauth-example://callback")!,
-    permissions: [.readAccount, .writeNotes]
+    permissions: [.account.read, .notes.write]
 )
 
 let authorizationURL = try request.authorizationURL()
@@ -61,13 +61,22 @@ The same error is thrown while the user hasn't approved the request yet, and whe
 
 ## Permissions
 
-`MiAuthPermission` provides a constant for every non-administrative permission Misskey defines, such as `.readAccount`, `.writeNotes`, `.readNotifications`, or `.writeReactions`.
+Misskey permissions take the form `read:{resource}` or `write:{resource}`. `MiAuthPermission` exposes every non-administrative resource Misskey defines as a property, and each resource offers only the operations Misskey allows:
+
+```swift
+let permissions: [MiAuthPermission] = [
+    .account.read,
+    .notes.write,          // there is no `.notes.read`; reading notes needs no permission
+    .notifications.read,
+    .reactions.write,
+]
+```
 
 Misskey-compatible servers may add permission strings over time, so permissions are open-ended. Note that the authorization page silently drops permission values the instance doesn't know, so a typo or an unsupported permission results in a token without that permission rather than an error.
 
 ```swift
 let permissions: [MiAuthPermission] = [
-    .readAccount,
+    .account.read,
     MiAuthPermission("read:admin:meta"),
     MiAuthPermission("custom:capability"),
 ]
